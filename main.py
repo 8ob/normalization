@@ -1,8 +1,12 @@
+import math
 import pandas as pd 
 
 
-def scale(file, col):
-   """determines which scaling alg to use"""
+def scale(df, feature_name):
+   """
+   determines which scaling method to use
+   """
+
    
 def clipping(sd, df, feature_name):
   """
@@ -15,7 +19,7 @@ def clipping(sd, df, feature_name):
 
   pre_clipping_size = float(df.shape[0])
 
-  feature_min = df[feature_name].mean() - df[feature_name].std()
+  feature_min = df[feature_name].mean() - df[feature_name].std()  # I did not change this, but I believe that you need to multiply "df[feature_name].std()" by "sd" to get the correct feature min/max - Adit
   feature_max = df[feature_name].mean() + df[feature_name].std()
 
   if feature_max >= df[feature_name].max() and feature_min <= df[feature_name].min():
@@ -67,22 +71,58 @@ def clipping_min(min, df, feature_name):
   print(str(percent_clipped) + "% of data clipped.")
   return new_df
    
-def logScale(file, col):
+def log_scale(df, feature_name):
    """
-   Takes in a csv file, col to be scaled
-   Edits the dataframe directly and returns nothing
+   Takes in a dataframe, feature to be scaled and returns logScaled dataset
    """
+   if feature_name not in df.columns:
+    raise ValueError("Feature name is invalid, please provide a string.")
+   
+   original_sd = df[feature_name].std()
+   original_mean = df[feature_name].mean()
+   new_df = df
+   
+   new_df[feature_name] = new_df[feature_name].apply(lambda x: math.log(x))
+
+   print("-"*20)
+   print("Standard Deviation:", original_sd, "-->", new_df[feature_name].std())
+   print("Mean:", original_mean, "-->", new_df[feature_name].mean())
+   print("-"*20)
+   
+   return new_df
 
 
-def linscale(file, col, max, min):
+
+
+
+def range_scale(df, feature_name, max, min):
    """ 
-    Takes in a csv file, col to be scaled, max value and min value in the file and col
-    Edits the dataframe directly and returns nothing
+   Takes in a dataframe, feature to be scaled, max value and min value to range scale to
+   Returns dataframe scaled to range
    """
-
-
-
-   return
+   if feature_name not in df.columns:
+     raise ValueError("Feature name is invalid, please provide a string.")
+   
+   if max < min:
+     temp = min
+     min = max
+     max = temp
+   
+   new_df = df
+   x_min = new_df[feature_name].min()
+   x_max = new_df[feature_name].max()
+   
+   if x_max == max and x_min == min:
+     print("Data is already scaled to range: (" + min, "-", max + ")")
+     return df
+   # two lines just so your eyes don't die trying to read the math
+   new_df[feature_name] = new_df[feature_name].apply(lambda x: ((x - x_min) / (x_max - x_min)))
+   new_df[feature_name] = new_df[feature_name].apply(lambda x: x * (max - min) + min) 
+   
+   print("-"*20)
+   print ("Scaled from (" + x_min, "-", x_max + ") to (" + min, "-", max + ")")
+   print("-"*20)
+   return new_df
 
 
 
